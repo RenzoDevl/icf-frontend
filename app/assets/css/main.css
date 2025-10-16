@@ -1,0 +1,20 @@
+@import "tailwindcss";
+
+/* Altura do header (mobile/desktop) */
+:root {
+  --header-h: 64px; /* desktop */
+}
+@media (max-width: 767px) {
+  :root { --header-h: 56px; } /* mobile */
+}
+
+/* Diz ao navegador para "guardar" um padding de rolagem no topo.
+   Funciona para #âncoras e também para scrollIntoView */
+html {
+  scroll-padding-top: var(--header-h);
+}
+
+/* Alvo de âncora: use em cada section com id (inicio, imoveis, sobre, contato) */
+.anchor {
+  scroll-margin-top: var(--header-h);
+}
