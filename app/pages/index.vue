@@ -29,16 +29,16 @@ const destaques = [
   },
   {
     id: 2,
-    tipo: 'Casa',
-    bairro: 'Ininga • Teresina',
-    titulo: 'Casa Moderna com Piscina e Jardim',
-    preco: 850000,
-    area: 280,
-    quartos: 4,
-    banheiros: 3,
-    vagas: 3,
+    tipo: 'Apartamento',
+    bairro: 'Joia • Timon',
+    titulo: 'Apartamento de Luxo com Vista Panorâmica',
+    preco: 450000,
+    area: 120,
+    quartos: 3,
+    banheiros: 2,
+    vagas: 2,
     status: 'COMPRAR',
-    capa: 'https://images.unsplash.com/photo-1502005229762-cf1b2da7c52f?q=80&w=1400&auto=format&fit=crop'
+    capa: 'https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?q=80&w=1400&auto=format&fit=crop'
   },
   {
     id: 3,
@@ -51,7 +51,7 @@ const destaques = [
     banheiros: 1,
     vagas: 2,
     status: 'COMPRAR',
-    capa: 'https://images.unsplash.com/photo-1497366216548-37526070297c?q=80&w=1400&auto=format&fit=crop'
+    capa: 'https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?q=80&w=1400&auto=format&fit=crop'
   }
 ]
 
