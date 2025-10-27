@@ -1,186 +1,198 @@
-<script setup>
+<script setup lang="ts">
+import { computed } from 'vue'
+import { useImoveis } from '@/composables/useImoveis'
+
 useHead({
-  title: 'ICF — Imobiliária Carlos Fernandes',
+  title: 'Carlos Fernandes Imóveis',
   meta: [
     {
       name: 'description',
-      content: 'Compra, venda e locação de imóveis em Teresina e região — atendimento consultivo e transparente.'
+      content:
+        'Compra, venda e locação de imóveis em Teresina e região — atendimento consultivo e transparente.'
     }
   ]
 })
 
 const whatsapp = '5586999999999'
-const wpp = (msg) =>
-  `https://wa.me/${whatsapp}?text=${encodeURIComponent(msg || 'Olá! Tenho interesse em um imóvel.')}`
+const wpp = (msg?: string) =>
+  `https://wa.me/${whatsapp}?text=${encodeURIComponent(
+    msg || 'Olá! Tenho interesse em um imóvel.'
+  )}`
 
-const destaques = [
-  {
-    id: 1,
-    tipo: 'Apartamento',
-    bairro: 'Parque Piauí • Teresina',
-    titulo: 'Apartamento de Luxo com Vista Panorâmica',
-    preco: 450000,
-    area: 120,
-    quartos: 3,
-    banheiros: 2,
-    vagas: 2,
-    status: 'COMPRAR',
-    capa: 'https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?q=80&w=1400&auto=format&fit=crop'
-  },
-  {
-    id: 2,
-    tipo: 'Apartamento',
-    bairro: 'Joia • Timon',
-    titulo: 'Apartamento de Luxo com Vista Panorâmica',
-    preco: 450000,
-    area: 120,
-    quartos: 3,
-    banheiros: 2,
-    vagas: 2,
-    status: 'COMPRAR',
-    capa: 'https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?q=80&w=1400&auto=format&fit=crop'
-  },
-  {
-    id: 3,
-    tipo: 'Sala Comercial',
-    bairro: 'Centro • Teresina',
-    titulo: 'Sala Comercial no Centro Empresarial',
-    preco: 320000,
-    area: 85,
-    quartos: 1,
-    banheiros: 1,
-    vagas: 2,
-    status: 'COMPRAR',
-    capa: 'https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?q=80&w=1400&auto=format&fit=crop'
-  }
-]
+// dados vindos do composable
+const { list } = useImoveis()
 
+// cards para o componente PropertyCard + deep-link para /imoveis?ref=<id>
 const cards = computed(() =>
-  destaques.map((d) => ({
+  list.value.map((d) => ({
     titulo: d.titulo,
     tipo: d.tipo,
     local: d.bairro,
     preco: d.preco,
     capa: d.capa,
-    tag: d.status,  // não exibimos visualmente, mas mantive caso queira reaproveitar
+    tag: d.status,
     href: `/imoveis?ref=${d.id}`,
     kpis: [
       { icon: 'mdi:ruler-square', text: `${d.area}m²` },
-      { icon: 'mdi:bed-outline', text: d.quartos },
-      { icon: 'mdi:shower', text: d.banheiros },
-      { icon: 'mdi:car-outline', text: d.vagas }
+      { icon: 'mdi:bed-outline',  text: String(d.quartos) },
+      { icon: 'mdi:shower',       text: String(d.banheiros) },
+      { icon: 'mdi:car-outline',  text: String(d.vagas) }
     ]
   }))
 )
 
 const aboutBullets = [
-  { icon: 'ph:seal-check',   text: 'Mais de 15 anos de experiência no mercado imobiliário' },
-  { icon: 'ph:users-three',  text: 'Equipe qualificada e comprometida com você' },
-  { icon: 'ph:handshake',    text: 'Atendimento personalizado e consultoria gratuita' },
-  { icon: 'ph:buildings',    text: 'Portfólio diversificado de imóveis' },
+  { icon: 'ph:seal-check', text: 'Mais de 18 anos de experiência no mercado imobiliário' },
+  { icon: 'ph:users-three', text: 'Equipe qualificada e comprometida com você' },
+  { icon: 'ph:handshake', text: 'Atendimento personalizado e consultoria gratuita' },
+  { icon: 'ph:buildings', text: 'Portfólio diversificado de imóveis' },
   { icon: 'ph:shield-check', text: 'Transparência e segurança em todas as negociações' },
-  { icon: 'ph:chart-line-up',text: 'Acompanhamento completo do processo' }
+  { icon: 'ph:chart-line-up', text: 'Acompanhamento completo do processo' }
 ]
 
-const onLead = (payload) => {
-  console.log('Lead:', payload)
+const onLead = () => {
   alert('Mensagem enviada! Entraremos em contato em breve.')
 }
 </script>
 
 <template>
-  <div>
-    <AppHeader :whatsapp-url="wpp('Olá! Vim pelo site e quero falar com um corretor.')" />
+  <div class="bg-brand-black text-slate-100">
+    <!-- âncora para o link Início (/#top) -->
+    <div id="top" class="anchor"></div>
 
-    <HeroBanner
-      badge="IMOBILIÁRIA CARLOS FERNANDES"
-      title="Encontre o Imóvel<br/>dos Seus Sonhos"
-      subtitle="Apartamentos, casas e salas comerciais em Teresina e região. Experiência, confiança e o melhor atendimento do mercado."
-      primary-href="#imoveis"
-      primary-label="Ver Imóveis"
-      :secondary-href="wpp('Olá! Tenho interesse em um imóvel.')"
-      secondary-label="Falar no WhatsApp"
-    />
+    <!-- Hero -->
+    <div class="reveal inview anim-down" style="--d:.0s">
+      <HeroBanner
+        badge="CARLOS FERNANDES IMÓVEIS"
+        title="Encontre o Imóvel<br/>dos Seus Sonhos"
+        subtitle="Imóveis em Teresina e região. Experiência, confiança e o melhor atendimento do mercado."
+        primary-href="#imoveis"
+        primary-label="Ver Imóveis"
+        :secondary-href="wpp('Olá! Tenho interesse em um imóvel.')"
+        secondary-label="Falar no WhatsApp"
+      />
+    </div>
 
-    <section id="imoveis" class="py-16 md:py-20">
-      <UiReveal anim="fade-down">
-        <SectionTitle title="Imóveis em Destaque" subtitle="Confira nossa seleção especial de imóveis premium" />
-      </UiReveal>
+    <!-- Destaques -->
+    <section id="imoveis" class="anchor py-16 md:py-20">
+      <div class="reveal anim-down" style="--d:.05s">
+        <SectionTitle
+          title="Imóveis em Destaque"
+          subtitle="Confira nossa seleção especial de imóveis premium"
+          class="text-slate-100"
+        />
+      </div>
 
       <div class="mx-auto max-w-[1120px] px-4 sm:px-6 grid gap-6 md:grid-cols-2 lg:grid-cols-3 mt-10 items-stretch">
-        <UiReveal v-for="(c, i) in cards" :key="c.titulo + i" anim="fade-up" :delay="i * 90">
-          <PropertyCard v-bind="c" />
-        </UiReveal>
-      </div>
-
-      <UiReveal anim="scale-in" :delay="240">
-        <div class="text-center mt-8">
-          <UiCtaLink to="/imoveis" label="Ver Todos os Imóveis" icon="ph:arrow-right" size="md" />
+        <div v-for="(c, i) in cards" :key="c.titulo + i" class="reveal anim-up" :style="`--d:${(i*0.09).toFixed(2)}s`">
+          <div class="rounded-2xl border border-white/5 bg-brand-surface/40 hover:bg-brand-surface/60 transition">
+            <PropertyCard v-bind="c" />
+          </div>
         </div>
-      </UiReveal>
-    </section>
+      </div>
 
-    <section id="sobre" class="py-16 md:py-20 bg-slate-100">
-      <div class="mx-auto max-w-[1120px] px-4 sm:px-6 grid md:grid-cols-2 gap-8 md:gap-10 items-start">
-        <UiReveal anim="slide-right">
-          <div>
-            <SectionTitle :center="false" title="Sobre a Imobiliária Carlos Fernandes" />
-            <p class="text-slate-600 mt-3 max-w-[60ch]">
-              Há mais de 15 anos no mercado, a ICF é sinônimo de confiança e profissionalismo.
-              Ajudamos famílias a realizarem o sonho do imóvel próprio e auxiliamos investidores
-              a encontrarem oportunidades seguras.
-            </p>
-
-            <div class="mt-5">
-              <UiCtaLink to="/sobre" label="Conheça Nossa História" icon="ph:book-open-text" size="md" />
-            </div>
-          </div>
-        </UiReveal>
-
-        <UiReveal anim="slide-left" :delay="90">
-          <div class="grid gap-3">
-            <AboutFeaturePill v-for="(f, idx) in aboutBullets" :key="idx" :icon="f.icon" :text="f.text" />
-          </div>
-        </UiReveal>
+      <!-- Botão que leva para a página /imoveis -->
+      <div class="text-center mt-8 reveal anim-scale" style="--d:.24s">
+        <UiCtaLink to="/imoveis" label="Ver Todos os Imóveis" icon="ph:arrow-right" size="md" />
       </div>
     </section>
 
+    <!-- Sobre -->
+    <section id="sobre" class="anchor py-16 md:py-20 bg-brand-surface">
+      <div class="mx-auto max-w-[1120px] px-4 sm:px-6 md:px-8 grid md:grid-cols-2 gap-x-10 gap-y-10 md:items-start">
+        <div class="reveal anim-right self-start" style="--d:.0s">
+          <SectionTitle :center="false" title="Sobre a Carlos Fernandes Imóveis" class="text-slate-900" />
+          <p class="text-slate-700 mt-5 leading-relaxed max-w-[62ch]">
+            Há mais de <strong class="font-semibold">18 anos</strong> no mercado, a ICF é sinônimo de confiança e
+            profissionalismo. Ajudamos famílias a realizarem o sonho do imóvel próprio e
+            auxiliamos investidores a encontrarem oportunidades seguras.
+          </p>
+          <div class="mt-6">
+            <UiCtaLink to="/sobre" label="Conheça Nossa História" icon="ph:book-open-text" size="md" />
+          </div>
+        </div>
+
+        <div class="reveal anim-left grid gap-3 self-start md:mt-[6px]" style="--d:.09s">
+          <AboutFeaturePill
+            v-for="(f, idx) in aboutBullets"
+            :key="idx"
+            :icon="f.icon"
+            :text="f.text"
+            class="bg-white border border-slate-200/80 hover:border-red-300/70"
+          />
+        </div>
+      </div>
+    </section>
+
+    <!-- Serviços -->
     <section class="py-16 md:py-20">
-      <UiReveal anim="fade-down">
-        <SectionTitle title="Nossos Serviços" subtitle="Soluções completas para todas as suas necessidades imobiliárias" />
-      </UiReveal>
+      <div class="reveal anim-down" style="--d:.0s">
+        <SectionTitle
+          title="Nossos Serviços"
+          subtitle="Soluções completas para todas as suas necessidades imobiliárias"
+          class="text-slate-100"
+        />
+      </div>
 
       <div class="mx-auto max-w-[1120px] px-4 sm:px-6 grid gap-6 md:grid-cols-2 lg:grid-cols-3 mt-10">
-        <UiReveal anim="fade-up" :delay="60">
-          <ServiceCard icon="ph:house-line" title="Venda e Compra" text="Acompanhamos da avaliação à escritura." />
-        </UiReveal>
-        <UiReveal anim="fade-up" :delay="120">
-          <ServiceCard icon="ph:key" title="Locação" text="Encontre o imóvel ideal para alugar." />
-        </UiReveal>
-        <UiReveal anim="fade-up" :delay="180">
-          <ServiceCard icon="ph:chart-line-up" title="Captação de Imóveis" text="Divulgue seu imóvel e alcance potenciais clientes." />
-        </UiReveal>
+        <div class="reveal anim-up" style="--d:.06s">
+          <ServiceCard
+            icon="ph:house-line"
+            title="Construção e Venda"
+            text="Da obra à escritura: conduzimos todo o ciclo de construção e venda."
+            class="bg-brand-surface border border-white/10 hover:border-primary"
+          />
+        </div>
+
+        <div class="reveal anim-up" style="--d:.12s">
+          <ServiceCard
+            icon="ph:key"
+            title="Locação"
+            text="Encontre o imóvel ideal para locação com agilidade e segurança."
+            class="bg-brand-surface border border-white/10 hover:border-primary"
+          />
+        </div>
+
+        <div class="reveal anim-up" style="--d:.18s">
+          <ServiceCard
+            icon="ph:blueprint"
+            title="Lançamentos & Vendas Diretas"
+            text="Venda direta do construtor: do projeto à entrega das chaves."
+            class="bg-brand-surface border border-white/10 hover:border-primary"
+          />
+        </div>
       </div>
     </section>
 
+    <!-- Depoimentos -->
     <section class="py-16 md:py-20">
-      <UiReveal anim="fade-down">
-        <SectionTitle title="O Que Dizem Nossos Clientes" />
-      </UiReveal>
+      <div class="reveal anim-down" style="--d:.0s">
+        <SectionTitle title="O Que Dizem Nossos Clientes" class="text-slate-100" />
+      </div>
+
       <div class="mx-auto max-w-[1120px] px-4 sm:px-6 grid gap-6 md:grid-cols-2 lg:grid-cols-3 mt-10">
-        <UiReveal anim="fade-up" :delay="60"><TestimonialCard quote="Excelente atendimento! Processo rápido e transparente." author="Ana P." /></UiReveal>
-        <UiReveal anim="fade-up" :delay="120"><TestimonialCard quote="Vendi minha casa em menos de 2 semanas." author="Marcos R." /></UiReveal>
-        <UiReveal anim="fade-up" :delay="180"><TestimonialCard quote="Imóvel incrível, suporte do início ao fim." author="Júlia S." /></UiReveal>
+        <div class="reveal anim-up" style="--d:.06s">
+          <TestimonialCard
+            quote="Excelente atendimento! Processo rápido e transparente."
+            author="Ana P."
+            class="bg-brand-surface border border-white/10"
+          />
+        </div>
+        <div class="reveal anim-up" style="--d:.12s">
+          <TestimonialCard
+            quote="Vendi minha casa em menos de 2 semanas."
+            author="Marcos R."
+            class="bg-brand-surface border border-white/10"
+          />
+        </div>
+        <div class="reveal anim-up" style="--d:.18s">
+          <TestimonialCard
+            quote="Imóvel incrível, suporte do início ao fim."
+            author="Júlia S."
+            class="bg-brand-surface border border-white/10"
+          />
+        </div>
       </div>
     </section>
-
-    <section id="contato" class="py-16 md:py-20">
-      <div class="mx-auto max-w-[1120px] px-4 sm:px-6 grid gap-6 md:grid-cols-2">
-        <UiReveal anim="slide-right"><ContactForm @submit="onLead" /></UiReveal>
-        <UiReveal anim="slide-left" :delay="90"><ContactAside :whatsapp-href="wpp('Olá! Gostaria de mais informações.')" /></UiReveal>
-      </div>
-    </section>
-
-    <AppFooter creci="Creci-PI 00000" />
   </div>
 </template>

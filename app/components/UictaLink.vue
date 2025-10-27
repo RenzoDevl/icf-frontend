@@ -17,12 +17,12 @@ const sz = computed(() => {
 
 <template>
   <NuxtLink
-    :to="to"
-    class="inline-flex items-center justify-center gap-2 rounded-[14px] font-semibold
-           text-white bg-blue-600 hover:bg-blue-700 shadow transition-colors"
-    :class="sz"
-  >
-    <span>{{ label || 'Saiba mais' }}</span>
-    <Iconv-if="icon" :name="icon" />
-  </NuxtLink>
+  :to="to"
+  class="inline-flex items-center justify-center gap-2 rounded-[14px] font-semibold
+         text-white bg-primary hover:bg-primary-hover shadow transition-colors"
+  :class="sz"
+>
+  <span>{{ label || 'Saiba mais' }}</span>
+  <NuxtIcon v-if="icon" :name="icon" />
+</NuxtLink>
 </template>

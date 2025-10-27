@@ -1,20 +1,70 @@
 @import "tailwindcss";
 
-/* Altura do header (mobile/desktop) */
-:root {
-  --header-h: 64px; /* desktop */
-}
-@media (max-width: 767px) {
-  :root { --header-h: 56px; } /* mobile */
+:root { --header-h: 130px; }
+
+@media (max-width: 768px) {
+  :root { --header-h: 128px; }
 }
 
-/* Diz ao navegador para "guardar" um padding de rolagem no topo.
-   Funciona para #âncoras e também para scrollIntoView */
-html {
-  scroll-padding-top: var(--header-h);
+html { scroll-padding-top: var(--header-h); }
+
+.anchor { scroll-margin-top: var(--header-h); }
+
+@media (prefers-reduced-motion: reduce) {
+  [class*="animate-"] {
+    animation: none !important;
+    transition: none !important;
+  }
 }
 
-/* Alvo de âncora: use em cada section com id (inicio, imoveis, sobre, contato) */
-.anchor {
-  scroll-margin-top: var(--header-h);
+:root{
+  --brand-black:#ffffff;
+  --brand-surface:#ffffff;
+  --brand-text:#e5e7eb;
+  --primary:#e11d48;
+  --primary-hover:#be123c;
 }
+
+body {
+  background: var(--brand-black);
+  color: var(--brand-text);
+}
+
+.bg-brand-black   { background-color: var(--brand-black); }
+.bg-brand-surface { background-color: var(--brand-surface); }
+.text-brand-text  { color: var(--brand-text); }
+.text-primary     { color: var(--primary); }
+.bg-primary       { background: var(--primary); }
+.bg-primary:hover { background: var(--primary-hover); }
+
+@layer utilities {
+  .reveal-start { opacity: 0; transform: translateY(8px); }
+}
+
+.reveal{
+  --d: 0s;
+  opacity: 0;
+  will-change: transform, opacity;
+}
+.reveal.inview{ opacity: 1; }
+
+.anim-up    { transform: translateY(16px); }
+.anim-down  { transform: translateY(-16px); }
+.anim-left  { transform: translateX(20px); }
+.anim-right { transform: translateX(-20px); }
+.anim-scale { transform: scale(.96); }
+.anim-fade  { transform: none; }
+
+.reveal.inview.anim-up    { animation: fadeUp    .6s ease-out var(--d) both; }
+.reveal.inview.anim-down  { animation: fadeDown  .6s ease-out var(--d) both; }
+.reveal.inview.anim-left  { animation: slideLeft .6s ease-out var(--d) both; }
+.reveal.inview.anim-right { animation: slideRight .6s ease-out var(--d) both; }
+.reveal.inview.anim-scale { animation: scaleIn   .5s ease-out var(--d) both; }
+.reveal.inview.anim-fade  { animation: fadeIn    .6s ease-out var(--d) both; }
+
+@keyframes fadeIn   { from{opacity:0} to{opacity:1} }
+@keyframes fadeUp   { from{opacity:0; transform:translateY(16px)} to{opacity:1; transform:translateY(0)} }
+@keyframes fadeDown { from{opacity:0; transform:translateY(-16px)} to{opacity:1; transform:translateY(0)} }
+@keyframes slideLeft{ from{opacity:0; transform:translateX(20px)} to{opacity:1; transform:translateX(0)} }
+@keyframes slideRight{from{opacity:0; transform:translateX(-20px)} to{opacity:1; transform:translateX(0)} }
+@keyframes scaleIn  { from{opacity:0; transform:scale(.96)} to{opacity:1; transform:scale(1)} }

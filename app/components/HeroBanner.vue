@@ -1,7 +1,7 @@
 <script setup lang="ts">
 const props = defineProps({
   badge: { type: String, default: 'IMOBILIÁRIA CARLOS FERNANDES' },
-  title: { type: String, required: true }, 
+  title: { type: String, required: true },
   subtitle: {
     type: String,
     default:
@@ -18,8 +18,9 @@ const props = defineProps({
   <section
     id="inicio"
     class="relative isolate overflow-hidden text-white
-           bg-gradient-to-br from-[#1E40AF] via-[#2563EB] to-[#1E3A8A]"
+           bg-gradient-to-br from-[#b91c1c] via-[#ef4444] to-[#7f1d1d]"
   >
+    <!-- brilho/halo -->
     <div
       aria-hidden="true"
       class="pointer-events-none absolute -z-10 right-[-15%] top-[-10%] h-[70vw] w-[70vw]
