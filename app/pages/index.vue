@@ -1,43 +1,46 @@
-<script setup lang="ts">
-import { computed } from 'vue'
+<script setup>
+import { computed, onMounted, onServerPrefetch } from 'vue'
 import { useImoveis } from '@/composables/useImoveis'
 
+// meta
 useHead({
   title: 'Carlos Fernandes Imóveis',
   meta: [
     {
       name: 'description',
-      content:
-        'Compra, venda e locação de imóveis em Teresina e região — atendimento consultivo e transparente.'
+      content: 'Compra, venda e locação de imóveis em Teresina e região — atendimento consultivo e transparente.'
     }
   ]
 })
 
 const whatsapp = '5586999999999'
-const wpp = (msg?: string) =>
-  `https://wa.me/${whatsapp}?text=${encodeURIComponent(
-    msg || 'Olá! Tenho interesse em um imóvel.'
-  )}`
+const wpp = (msg) =>
+  `https://wa.me/${whatsapp}?text=${encodeURIComponent(msg || 'Olá! Tenho interesse em um imóvel.')}`
 
-// dados vindos do composable
-const { list } = useImoveis()
+// composable que faz: GET /api/imoveis/publicos + capas
+const { items, loading, listar } = useImoveis()
 
-// cards para o componente PropertyCard + deep-link para /imoveis?ref=<id>
+// SSR: já tenta trazer
+onServerPrefetch(async () => {
+  await listar({ page: 0, size: 30 })
+})
+
+// Client: se por algum motivo veio vazio, tenta de novo
+onMounted(async () => {
+  if (!items.value || !items.value.length) {
+    await listar({ page: 0, size: 30 })
+  }
+})
+
+// normaliza pra PropertyCard (que recebe :item e :href)
 const cards = computed(() =>
-  list.value.map((d) => ({
-    titulo: d.titulo,
-    tipo: d.tipo,
-    local: d.bairro,
-    preco: d.preco,
-    capa: d.capa,
-    tag: d.status,
-    href: `/imoveis?ref=${d.id}`,
-    kpis: [
-      { icon: 'mdi:ruler-square', text: `${d.area}m²` },
-      { icon: 'mdi:bed-outline',  text: String(d.quartos) },
-      { icon: 'mdi:shower',       text: String(d.banheiros) },
-      { icon: 'mdi:car-outline',  text: String(d.vagas) }
-    ]
+  (items.value || []).map((d) => ({
+    item: {
+      ...d,
+      // garante que tenha algo em "local"
+      bairro: d.bairroLabel || d.cidadeLabel || d.endereco?.bairro || d.endereco?.cidade || ''
+    },
+    href: `/imoveis/${d.id}`
   }))
 )
 
@@ -49,15 +52,10 @@ const aboutBullets = [
   { icon: 'ph:shield-check', text: 'Transparência e segurança em todas as negociações' },
   { icon: 'ph:chart-line-up', text: 'Acompanhamento completo do processo' }
 ]
-
-const onLead = () => {
-  alert('Mensagem enviada! Entraremos em contato em breve.')
-}
 </script>
 
 <template>
   <div class="bg-brand-black text-slate-100">
-    <!-- âncora para o link Início (/#top) -->
     <div id="top" class="anchor"></div>
 
     <!-- Hero -->
@@ -73,7 +71,7 @@ const onLead = () => {
       />
     </div>
 
-    <!-- Destaques -->
+    <!-- Imóveis -->
     <section id="imoveis" class="anchor py-16 md:py-20">
       <div class="reveal anim-down" style="--d:.05s">
         <SectionTitle
@@ -83,15 +81,33 @@ const onLead = () => {
         />
       </div>
 
-      <div class="mx-auto max-w-[1120px] px-4 sm:px-6 grid gap-6 md:grid-cols-2 lg:grid-cols-3 mt-10 items-stretch">
-        <div v-for="(c, i) in cards" :key="c.titulo + i" class="reveal anim-up" :style="`--d:${(i*0.09).toFixed(2)}s`">
-          <div class="rounded-2xl border border-white/5 bg-brand-surface/40 hover:bg-brand-surface/60 transition">
-            <PropertyCard v-bind="c" />
+      <div class="mx-auto max-w-[1120px] px-4 sm:px-6 mt-10">
+        <p v-if="loading" class="text-center text-slate-400 py-10">
+          Carregando imóveis...
+        </p>
+
+        <p v-else-if="!cards.length" class="text-center text-slate-400 py-10">
+          Nenhum imóvel encontrado.
+        </p>
+
+        <div
+          v-else
+          class="grid gap-6 md:grid-cols-2 lg:grid-cols-3 items-stretch"
+        >
+          <div
+            v-for="(c, i) in cards"
+            :key="c.item.id || i"
+            class="reveal anim-up"
+            :style="`--d:${(i * 0.09).toFixed(2)}s`"
+          >
+            <div class="rounded-2xl border border-white/5 bg-brand-surface/40 hover:bg-brand-surface/60 transition">
+              <!-- importante: PropertyCard espera :item -->
+              <PropertyCard :item="c.item" :href="c.href" />
+            </div>
           </div>
         </div>
       </div>
 
-      <!-- Botão que leva para a página /imoveis -->
       <div class="text-center mt-8 reveal anim-scale" style="--d:.24s">
         <UiCtaLink to="/imoveis" label="Ver Todos os Imóveis" icon="ph:arrow-right" size="md" />
       </div>
@@ -103,9 +119,7 @@ const onLead = () => {
         <div class="reveal anim-right self-start" style="--d:.0s">
           <SectionTitle :center="false" title="Sobre a Carlos Fernandes Imóveis" class="text-slate-900" />
           <p class="text-slate-700 mt-5 leading-relaxed max-w-[62ch]">
-            Há mais de <strong class="font-semibold">18 anos</strong> no mercado, a ICF é sinônimo de confiança e
-            profissionalismo. Ajudamos famílias a realizarem o sonho do imóvel próprio e
-            auxiliamos investidores a encontrarem oportunidades seguras.
+            Há mais de <strong class="font-semibold">18 anos</strong> no mercado, a ICF é sinônimo de confiança e profissionalismo.
           </p>
           <div class="mt-6">
             <UiCtaLink to="/sobre" label="Conheça Nossa História" icon="ph:book-open-text" size="md" />
@@ -119,46 +133,6 @@ const onLead = () => {
             :icon="f.icon"
             :text="f.text"
             class="bg-white border border-slate-200/80 hover:border-red-300/70"
-          />
-        </div>
-      </div>
-    </section>
-
-    <!-- Serviços -->
-    <section class="py-16 md:py-20">
-      <div class="reveal anim-down" style="--d:.0s">
-        <SectionTitle
-          title="Nossos Serviços"
-          subtitle="Soluções completas para todas as suas necessidades imobiliárias"
-          class="text-slate-100"
-        />
-      </div>
-
-      <div class="mx-auto max-w-[1120px] px-4 sm:px-6 grid gap-6 md:grid-cols-2 lg:grid-cols-3 mt-10">
-        <div class="reveal anim-up" style="--d:.06s">
-          <ServiceCard
-            icon="ph:house-line"
-            title="Construção e Venda"
-            text="Da obra à escritura: conduzimos todo o ciclo de construção e venda."
-            class="bg-brand-surface border border-white/10 hover:border-primary"
-          />
-        </div>
-
-        <div class="reveal anim-up" style="--d:.12s">
-          <ServiceCard
-            icon="ph:key"
-            title="Locação"
-            text="Encontre o imóvel ideal para locação com agilidade e segurança."
-            class="bg-brand-surface border border-white/10 hover:border-primary"
-          />
-        </div>
-
-        <div class="reveal anim-up" style="--d:.18s">
-          <ServiceCard
-            icon="ph:blueprint"
-            title="Lançamentos & Vendas Diretas"
-            text="Venda direta do construtor: do projeto à entrega das chaves."
-            class="bg-brand-surface border border-white/10 hover:border-primary"
           />
         </div>
       </div>

@@ -36,8 +36,8 @@ export default defineNuxtConfig({
 
   runtimeConfig: {
     public: {
-      // no Fly: fly secrets set NUXT_PUBLIC_API_BASE=https://cfi-backend.fly.dev/api
-      apiBase: process.env.NUXT_PUBLIC_API_BASE || 'http://localhost:8080/api'
+      // força o remoto em dev também
+      apiBase: process.env.NUXT_PUBLIC_API_BASE || 'https://cfi-backend.fly.dev/api'
     }
   },
 
@@ -47,10 +47,9 @@ export default defineNuxtConfig({
   },
 
   nitro: {
-    // estamos rodando em Node (Fly), não em GitHub Pages
     prerender: {
       crawlLinks: false,
-      routes: ['/', '/contato', '/sobre'] // as estáticas
+      routes: ['/', '/contato', '/sobre']
     },
     routeRules: {
       '/imoveis': { prerender: false },
