@@ -1,3 +1,4 @@
+// nuxt.config.ts
 import { defineNuxtConfig } from 'nuxt/config'
 import tailwindcss from '@tailwindcss/vite'
 
@@ -6,12 +7,17 @@ const base = '/icf-frontend/'
 export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
   devtools: { enabled: true },
+
   css: ['~/assets/css/main.css'],
+
   vite: {
     plugins: [tailwindcss()]
   },
+
   plugins: ['~/plugins/reveal.client.ts'],
+
   modules: ['@nuxt/icon'],
+
   app: {
     baseURL: base,
     head: {
@@ -27,20 +33,28 @@ export default defineNuxtConfig({
       meta: [{ name: 'theme-color', content: '#ffffff' }]
     }
   },
+
   runtimeConfig: {
     public: {
-      apiBase: process.env.NUXT_PUBLIC_API_BASE || 'http://localhost:8080'
+      // no Fly: fly secrets set NUXT_PUBLIC_API_BASE=https://cfi-backend.fly.dev/api
+      apiBase: process.env.NUXT_PUBLIC_API_BASE || 'http://localhost:8080/api'
     }
   },
+
   devServer: {
     host: '0.0.0.0',
     port: 4000
   },
+
   nitro: {
-    preset: 'github_pages',
+    // estamos rodando em Node (Fly), não em GitHub Pages
     prerender: {
-      crawlLinks: true,
-      routes: ['/', '/imoveis']
+      crawlLinks: false,
+      routes: ['/', '/contato', '/sobre'] // as estáticas
+    },
+    routeRules: {
+      '/imoveis': { prerender: false },
+      '/icf-frontend/imoveis': { prerender: false }
     }
   }
 })
