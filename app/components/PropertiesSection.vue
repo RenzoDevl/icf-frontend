@@ -49,7 +49,6 @@ const {
         <PropertyCard
           v-for="item in items"
           :key="item.id"
-          :item="item"
           :whatsapp-href="whatsappBuilder(`Olá! Tenho interesse no imóvel: ${item.titulo}.`)"
           class="animate-fade-up"
         />
