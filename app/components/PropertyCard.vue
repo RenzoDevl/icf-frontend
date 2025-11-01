@@ -15,13 +15,16 @@ const props = defineProps({
 
 const norm = computed(() => {
   const it = props.item || {}
+  const id = it.id ?? it.imovelId ?? null
+
   return {
+    id,
     titulo: it.titulo || '',
     tipo: it.tipo || '',
     local: it.bairro || it.endereco?.bairro || it.endereco?.cidade || '',
     preco: it.preco ?? 0,
     capa: it.capa || '',
-    href: props.href || (it.id ? `/imoveis/${it.id}` : '')
+    href: props.href || (id ? `/imoveis/${id}` : '')
   }
 })
 
@@ -48,7 +51,6 @@ const brl = (v) =>
            border border-black/10 transition-all duration-300
            hover:border-black/40 hover:shadow-[0_12px_30px_rgba(0,0,0,.08)]"
   >
-    <!-- imagem -->
     <div v-if="imgSrc" class="relative bg-slate-100 aspect-[16/10] overflow-hidden">
       <img
         :src="imgSrc"
@@ -82,7 +84,6 @@ const brl = (v) =>
       </p>
     </div>
 
-    <!-- link simples, sem UiButton -->
     <div v-if="norm.href" class="p-4 md:p-5 pt-0">
       <NuxtLink
         :to="norm.href"
