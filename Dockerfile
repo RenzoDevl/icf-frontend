@@ -21,14 +21,15 @@ RUN npm run build
 FROM node:20.19.0-slim
 WORKDIR /app
 
+# só o que precisa pra rodar o .output
 COPY --from=build /app/.output ./.output
 COPY --from=build /app/package.json ./
 
-# >>> pega a porta que o Fly manda
-ENV PORT=8080
-ENV NITRO_PORT=${PORT}
+ENV NODE_ENV=production
 ENV HOST=0.0.0.0
 
+# o Fly vai setar $PORT em runtime
 EXPOSE 8080
 
-CMD ["node", ".output/server/index.mjs"]
+# aqui a mágica: passa o $PORT do Fly pro NITRO_PORT na hora
+CMD ["sh", "-c", "NITRO_PORT=${PORT:-8080} HOST=0.0.0.0 node .output/server/index.mjs"]
