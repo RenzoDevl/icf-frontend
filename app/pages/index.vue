@@ -2,7 +2,6 @@
 import { computed, onMounted, onServerPrefetch } from 'vue'
 import { useImoveis } from '@/composables/useImoveis'
 
-// meta
 useHead({
   title: 'Carlos Fernandes Imóveis',
   meta: [
@@ -17,31 +16,31 @@ const whatsapp = '5586999999999'
 const wpp = (msg) =>
   `https://wa.me/${whatsapp}?text=${encodeURIComponent(msg || 'Olá! Tenho interesse em um imóvel.')}`
 
-// composable que faz: GET /api/imoveis/publicos + capas
 const { items, loading, listar } = useImoveis()
 
-// SSR: já tenta trazer
+// SSR
 onServerPrefetch(async () => {
-  await listar({ page: 0, size: 30 })
+  await listar({ page: 0, size: 30, force: true })
 })
 
-// Client: se por algum motivo veio vazio, tenta de novo
+// Client
 onMounted(async () => {
   if (!items.value || !items.value.length) {
-    await listar({ page: 0, size: 30 })
+    await listar({ page: 0, size: 30, force: true })
   }
 })
 
-// normaliza pra PropertyCard (que recebe :item e :href)
+// só 3 imóveis pra home
 const cards = computed(() =>
-  (items.value || []).map((d) => ({
-    item: {
-      ...d,
-      // garante que tenha algo em "local"
-      bairro: d.bairroLabel || d.cidadeLabel || d.endereco?.bairro || d.endereco?.cidade || ''
-    },
-    href: `/imoveis/${d.id}`
-  }))
+  (items.value || [])
+    .map((d) => ({
+      item: {
+        ...d,
+        bairro: d.bairroLabel || d.cidadeLabel || d.endereco?.bairro || d.endereco?.cidade || ''
+      },
+      href: `/imoveis/${d.id}`
+    }))
+    .slice(0, 3)
 )
 
 const aboutBullets = [
@@ -58,7 +57,6 @@ const aboutBullets = [
   <div class="bg-brand-black text-slate-100">
     <div id="top" class="anchor"></div>
 
-    <!-- Hero -->
     <div class="reveal inview anim-down" style="--d:.0s">
       <HeroBanner
         badge="CARLOS FERNANDES IMÓVEIS"
@@ -71,7 +69,6 @@ const aboutBullets = [
       />
     </div>
 
-    <!-- Imóveis -->
     <section id="imoveis" class="anchor py-16 md:py-20">
       <div class="reveal anim-down" style="--d:.05s">
         <SectionTitle
@@ -90,10 +87,7 @@ const aboutBullets = [
           Nenhum imóvel encontrado.
         </p>
 
-        <div
-          v-else
-          class="grid gap-6 md:grid-cols-2 lg:grid-cols-3 items-stretch"
-        >
+        <div v-else class="grid gap-6 md:grid-cols-2 lg:grid-cols-3 items-stretch">
           <div
             v-for="(c, i) in cards"
             :key="c.item.id || i"
@@ -101,7 +95,6 @@ const aboutBullets = [
             :style="`--d:${(i * 0.09).toFixed(2)}s`"
           >
             <div class="rounded-2xl border border-white/5 bg-brand-surface/40 hover:bg-brand-surface/60 transition">
-              <!-- importante: PropertyCard espera :item -->
               <PropertyCard :item="c.item" :href="c.href" />
             </div>
           </div>
@@ -113,7 +106,6 @@ const aboutBullets = [
       </div>
     </section>
 
-    <!-- Sobre -->
     <section id="sobre" class="anchor py-16 md:py-20 bg-brand-surface">
       <div class="mx-auto max-w-[1120px] px-4 sm:px-6 md:px-8 grid md:grid-cols-2 gap-x-10 gap-y-10 md:items-start">
         <div class="reveal anim-right self-start" style="--d:.0s">
@@ -138,7 +130,6 @@ const aboutBullets = [
       </div>
     </section>
 
-    <!-- Depoimentos -->
     <section class="py-16 md:py-20">
       <div class="reveal anim-down" style="--d:.0s">
         <SectionTitle title="O Que Dizem Nossos Clientes" class="text-slate-100" />

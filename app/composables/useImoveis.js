@@ -7,16 +7,17 @@ export function useImoveis () {
   const apiBase = (pub.apiBase || '').replace(/\/+$/, '')
   const { getCover, list: listStorage } = useStoragePublic()
 
-  // >>> agora é estado global/serializado
   const items = useState('imoveis-items', () => [])
   const pageInfo = useState('imoveis-page', () => ({}))
   const loading = useState('imoveis-loading', () => false)
   const error = useState('imoveis-error', () => null)
 
-  // lista pública
-  async function listar ({ titulo = '', page = 0, size = 30 } = {}) {
-    // se já tem e não pediram outro page, não precisa re-buscar
-    if (items.value.length && page === 0 && !titulo) return
+  // listar públicos
+  async function listar ({ titulo = '', page = 0, size = 30, force = false } = {}) {
+    // ❗ antes travava aqui
+    if (!force && items.value.length && page === 0 && !titulo) {
+      return
+    }
 
     loading.value = true
     error.value = null
@@ -61,7 +62,6 @@ export function useImoveis () {
     }
   }
 
-  // detalhe público (reaproveita se já tiver na lista)
   async function buscarPorId (id) {
     const cached = items.value.find(i => i.id === id)
     if (cached) return cached
