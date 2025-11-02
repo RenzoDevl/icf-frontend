@@ -1,10 +1,17 @@
-import { useRuntimeConfig, useState } from '#imports'
-import { useStoragePublic } from '~/composables/useStoragePublic'
+// composables/useImoveis.js
+import { useRuntimeConfig, useState, useNuxtApp } from '#imports'
 
 export function useImoveis () {
   const { public: pub } = useRuntimeConfig()
   const apiBase = (pub.apiBase || '').replace(/\/+$/, '')
-  const { getCover, list: listStorage } = useStoragePublic()
+
+  const storage =
+    process.client
+      ? useStoragePublic()
+      : {
+          getCover: async () => null,
+          list: async () => []
+        }
 
   const items = useState('imoveis-items', () => [])
   const pageInfo = useState('imoveis-page', () => ({}))
@@ -12,10 +19,11 @@ export function useImoveis () {
   const error = useState('imoveis-error', () => null)
 
   async function listar ({ titulo = '', page = 0, size = 30, force = false } = {}) {
-    if (process.meta.client && !force && items.value.length && page === 0 && !titulo) return
+    if (process.client && !force && items.value.length && page === 0 && !titulo) return
 
     loading.value = true
     error.value = null
+
     try {
       const qs = new URLSearchParams({ page, size })
       if (titulo) qs.set('titulo', titulo)
@@ -35,20 +43,21 @@ export function useImoveis () {
       items.value = base
       pageInfo.value = { ...data, content: undefined }
 
-      if (process.meta.client) {
+      if (process.client) {
         const toFill = items.value.filter(i => !i.capa)
         for (const imv of toFill) {
           try {
-            const c = await getCover({ imovelId: imv.id, tipo: 'imagens' })
+            const c = await storage.getCover({ imovelId: imv.id, tipo: 'imagens' })
             if (c?.coverUrlHq || c?.coverUrl) {
               imv.capa = c.coverUrlHq || c.coverUrl
               continue
             }
-            const imgs = await listStorage({ imovelId: imv.id, tipo: 'imagens' })
+            const imgs = await storage.list({ imovelId: imv.id, tipo: 'imagens' })
             if (Array.isArray(imgs) && imgs.length) {
               imv.capa = imgs[0].url
             }
-          } catch {}
+          } catch {
+          }
         }
       }
     } catch (e) {
@@ -66,20 +75,25 @@ export function useImoveis () {
 
     try {
       const it = await $fetch(`${apiBase}/imoveis/publicos/${id}`)
+
       let capa = cached?.capa || ''
-      if (!capa && process.meta.client) {
+
+      if (!capa && process.client) {
         try {
-          const c = await getCover({ imovelId: id, tipo: 'imagens' })
+          const c = await storage.getCover({ imovelId: id, tipo: 'imagens' })
           capa = c?.coverUrlHq || c?.coverUrl || ''
         } catch {
           try {
-            const imgs = await listStorage({ imovelId: id, tipo: 'imagens' })
+            const imgs = await storage.list({ imovelId: id, tipo: 'imagens' })
             capa = Array.isArray(imgs) && imgs.length ? imgs[0].url : ''
-          } catch {}
+          } catch {
+          }
         }
       }
+
       return { ...it, capa }
     } catch (e) {
+      console.error(e)
       error.value = e?.data?.message || e?.message || 'Falha ao buscar imóvel'
       throw e
     }
