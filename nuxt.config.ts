@@ -36,7 +36,6 @@ export default defineNuxtConfig({
 
   runtimeConfig: {
     public: {
-      // força o remoto em dev também
       apiBase: process.env.NUXT_PUBLIC_API_BASE || 'https://cfi-backend.fly.dev/api'
     }
   },
@@ -46,14 +45,20 @@ export default defineNuxtConfig({
     port: 4000
   },
 
+  // 👇 routeRules FICA FORA do nitro
+  routeRules: {
+    '/imoveis': { prerender: false },
+    // se alguém acessar com o base na frente
+    '/icf-frontend/imoveis': { prerender: false }
+  },
+
   nitro: {
     prerender: {
+      // não deixa sair clicando e quebrar o build
       crawlLinks: false,
-      routes: ['/', '/contato', '/sobre']
-    },
-    routeRules: {
-      '/imoveis': { prerender: false },
-      '/icf-frontend/imoveis': { prerender: false }
+      // se quiser realmente gerar estático, põe aqui. Se o / bater em API e quebrar, deixa []
+      routes: []
+      // routes: ['/', '/contato', '/sobre']
     }
   }
 })
