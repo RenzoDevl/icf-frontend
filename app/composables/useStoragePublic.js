@@ -1,28 +1,46 @@
 // ~/composables/useStoragePublic.js
+import { useRuntimeConfig } from '#imports'
+
 export function useStoragePublic (baseFromCaller) {
-  // se vier do caller, usa; senão tenta runtime; senão hardcode
-  const HARDCODE_BASE = 'https://cfi-backend.fly.dev/api'
-  let apiBase = baseFromCaller
-  if (!apiBase) {
-    try {
-      const cfg = useRuntimeConfig()
-      apiBase = cfg?.public?.apiBase || ''
-    } catch (_) {
-      apiBase = ''
+  const { $axios } = useNuxtApp()
+  const { public: pub } = useRuntimeConfig()
+  const apiBase = (baseFromCaller || pub.apiBase || 'https://cfi-backend.fly.dev/api').replace(/\/+$/, '')
+
+  const norm = (u) => {
+    if (!u) return ''
+    try { const url = new URL(u); return url.origin + url.pathname } catch { return String(u).split('?')[0] }
+  }
+  const dedupe = (arr) => {
+    const seen = new Set(), out = []
+    for (const u of arr) {
+      const k = norm(u)
+      if (u && !seen.has(k)) { seen.add(k); out.push(u) }
     }
-  }
-  if (!apiBase) apiBase = HARDCODE_BASE
-  apiBase = apiBase.replace(/\/+$/, '')
-
-  async function getCover ({ imovelId, tipo = 'imagens' }) {
-    const qs = new URLSearchParams({ imovelId: String(imovelId), tipo })
-    return await $fetch(`${apiBase}/storage/cover?${qs.toString()}`)
+    return out
   }
 
-  async function list ({ imovelId, tipo = 'imagens' }) {
-    const qs = new URLSearchParams({ imovelId: String(imovelId), tipo })
-    return await $fetch(`${apiBase}/storage/list?${qs.toString()}`)
+  async function getCover ({ imovelId, tipo = 'imagens' } = {}) {
+    const resp = await $axios.get(`${apiBase}/storage/cover`, { params: { imovelId: String(imovelId), tipo } })
+    const data = resp?.data ?? resp
+    return data
   }
 
-  return { getCover, list }
+  async function list ({ imovelId, tipo = 'imagens' } = {}) {
+    const resp = await $axios.get(`${apiBase}/storage/list`, { params: { imovelId: String(imovelId), tipo } })
+    const data = resp?.data ?? resp
+    return data
+  }
+
+  async function gallery ({ imovelId, tipo = 'imagens' } = {}) {
+    const c = await getCover({ imovelId, tipo })
+    const l = await list({ imovelId, tipo })
+    const raw = [
+      c?.coverUrlHq,
+      c?.coverUrl,
+      ...(Array.isArray(l) ? l.map(o => o?.url).filter(Boolean) : [])
+    ]
+    return dedupe(raw)
+  }
+
+  return { getCover, list, gallery }
 }

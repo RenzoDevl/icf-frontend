@@ -1,110 +1,72 @@
-// composables/useImoveis.js
-import { useRuntimeConfig, useState, useNuxtApp } from '#imports'
+// ~/composables/useImoveis.js
+import { useState, useRuntimeConfig } from '#imports'
 
 export function useImoveis () {
+  const { $axios } = useNuxtApp()
   const { public: pub } = useRuntimeConfig()
-  const apiBase = (pub.apiBase || '').replace(/\/+$/, '')
+  const apiBase = (pub.apiBase || 'https://cfi-backend.fly.dev/api').replace(/\/+$/, '')
 
-  const storage =
-    process.client
-      ? useStoragePublic()
-      : {
-          getCover: async () => null,
-          list: async () => []
-        }
+  const items    = useState('imoveis-items',   () => [])
+  const pageInfo = useState('imoveis-page',    () => ({ page: 0, size: 20, totalElements: 0, totalPages: 0 }))
+  const loading  = useState('imoveis-loading', () => false)
+  const error    = useState('imoveis-error',   () => null)
 
-  const items = useState('imoveis-items', () => [])
-  const pageInfo = useState('imoveis-page', () => ({}))
-  const loading = useState('imoveis-loading', () => false)
-  const error = useState('imoveis-error', () => null)
+  const normalizeId = (it) => it?.id ?? it?._id ?? it?.imovelId ?? null
 
-  async function listar ({ titulo = '', page = 0, size = 30, force = false } = {}) {
-    if (process.client && !force && items.value.length && page === 0 && !titulo) return
-
+  async function listarPublicos ({ page = 0, size = 20, titulo = '', force = false } = {}) {
+    if (!force && items.value.length && page === 0 && !titulo) return items.value
     loading.value = true
     error.value = null
-
     try {
-      const qs = new URLSearchParams({ page, size })
-      if (titulo) qs.set('titulo', titulo)
+      const params = { page, size }
+      if (titulo) params.titulo = titulo
 
-      const data = await $fetch(`${apiBase}/imoveis/publicos?${qs.toString()}`)
-      const content = Array.isArray(data?.content)
-        ? data.content
-        : Array.isArray(data) ? data : []
+      const data = await $axios.get(`${apiBase}/imoveis/publicos`, { params })
+      const content = Array.isArray(data?.content) ? data.content : (Array.isArray(data) ? data : [])
 
-      const base = content.map(it => ({
+      items.value = content.map(it => ({
         ...it,
-        cidadeLabel: it.endereco?.cidade || '',
-        bairroLabel: it.endereco?.bairro || '',
-        capa: it.capa || ''
+        id: String(normalizeId(it) ?? ''),
+        cidadeLabel: it?.endereco?.cidade || '',
+        bairroLabel: it?.endereco?.bairro || '',
+        capa: it?.capaUrl || it?.capa || ''
       }))
 
-      items.value = base
-      pageInfo.value = { ...data, content: undefined }
-
-      if (process.client) {
-        const toFill = items.value.filter(i => !i.capa)
-        for (const imv of toFill) {
-          try {
-            const c = await storage.getCover({ imovelId: imv.id, tipo: 'imagens' })
-            if (c?.coverUrlHq || c?.coverUrl) {
-              imv.capa = c.coverUrlHq || c.coverUrl
-              continue
-            }
-            const imgs = await storage.list({ imovelId: imv.id, tipo: 'imagens' })
-            if (Array.isArray(imgs) && imgs.length) {
-              imv.capa = imgs[0].url
-            }
-          } catch {
-          }
-        }
+      pageInfo.value = {
+        page, size,
+        totalElements: data?.totalElements ?? items.value.length,
+        totalPages: data?.totalPages ?? 1
       }
+
+      return items.value
     } catch (e) {
       console.error(e)
-      error.value = e?.data?.message || e?.message || 'Falha ao listar imóveis'
+      error.value = e?.message || 'Falha ao listar imóveis públicos'
       items.value = []
+      return items.value
     } finally {
       loading.value = false
     }
   }
 
   async function buscarPorId (id) {
-    const cached = items.value.find(i => i.id === id)
-    if (cached && cached.capa) return cached
-
+    if (!id) throw new Error('ID é obrigatório')
+    const realId = String(id)
+    loading.value = true
+    error.value = null
     try {
-      const it = await $fetch(`${apiBase}/imoveis/publicos/${id}`)
-
-      let capa = cached?.capa || ''
-
-      if (!capa && process.client) {
-        try {
-          const c = await storage.getCover({ imovelId: id, tipo: 'imagens' })
-          capa = c?.coverUrlHq || c?.coverUrl || ''
-        } catch {
-          try {
-            const imgs = await storage.list({ imovelId: id, tipo: 'imagens' })
-            capa = Array.isArray(imgs) && imgs.length ? imgs[0].url : ''
-          } catch {
-          }
-        }
-      }
-
-      return { ...it, capa }
+      const it = await $axios.get(`${apiBase}/imoveis/${encodeURIComponent(realId)}`)
+      const normId = String(normalizeId(it) ?? realId)
+      return { id: normId, ...it, capa: it?.capaUrl || it?.capa || '' }
     } catch (e) {
       console.error(e)
-      error.value = e?.data?.message || e?.message || 'Falha ao buscar imóvel'
+      error.value = e?.message || 'Falha ao buscar imóvel'
       throw e
+    } finally {
+      loading.value = false
     }
   }
 
-  return {
-    items,
-    pageInfo,
-    loading,
-    error,
-    listar,
-    buscarPorId
-  }
+  const listar = listarPublicos
+  return { items, pageInfo, loading, error, listarPublicos, listar, buscarPorId }
 }

@@ -36,10 +36,11 @@ export default defineNuxtConfig({
 
   runtimeConfig: {
     public: {
-      apiBase: process.env.NUXT_PUBLIC_API_BASE || 'https://cfi-backend.fly.dev/api'
+      apiBase: process.env.NUXT_PUBLIC_API_BASE
     }
   },
 
+  
   devServer: {
     host: '0.0.0.0',
     port: 4000

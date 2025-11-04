@@ -3,10 +3,12 @@
 import { computed, onMounted, onBeforeUnmount, nextTick } from 'vue'
 import { useRoute, useHead } from '#imports'
 import { useImoveis } from '@/composables/useImoveis'
+import { useStoragePublic } from '@/composables/useStoragePublic'
 
 useHead({ title: 'Todos os Imóveis' })
 
 const { items, listar, loading } = useImoveis()
+const storage = useStoragePublic()
 const route = useRoute()
 
 const fmtBRL = (n) =>
@@ -17,9 +19,25 @@ const fmtBRL = (n) =>
 
 const itens = computed(() => items.value || [])
 
-// SSR
 if (process.server) {
   await listar({ page: 0, size: 60 })
+}
+
+async function preencherCapas () {
+  const faltando = (items.value || []).filter(i => !i?.capa)
+  for (const imv of faltando) {
+    try {
+      const c = await storage.getCover({ imovelId: imv.id, tipo: 'imagens' })
+      if (c?.coverUrlHq || c?.coverUrl) {
+        imv.capa = c.coverUrlHq || c.coverUrl
+        continue
+      }
+      const lst = await storage.list({ imovelId: imv.id, tipo: 'imagens' })
+      if (Array.isArray(lst) && lst.length) {
+        imv.capa = lst[0]?.url || ''
+      }
+    } catch {}
+  }
 }
 
 let io = null
@@ -28,8 +46,9 @@ onMounted(async () => {
   if (!items.value?.length) {
     await listar({ page: 0, size: 60 })
   }
+  await preencherCapas()
 
-  const refId = Number(route.query.ref)
+  const refId = String(route.query.ref || '')
   if (refId) {
     await nextTick()
     const el = document.getElementById(`card-${refId}`)
@@ -71,7 +90,6 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <!-- Cabeçalho -->
   <section class="py-14 md:py-16">
     <div
       class="mx-auto max-w-[1120px] px-4 sm:px-6 text-center reveal anim-down"
@@ -86,7 +104,6 @@ onBeforeUnmount(() => {
     </div>
   </section>
 
-  <!-- Cards -->
   <section class="pb-16">
     <div class="mx-auto max-w-[1120px] px-4 sm:px-6">
       <p class="text-slate-600 reveal anim-fade" style="--d:.05s">
@@ -111,7 +128,6 @@ onBeforeUnmount(() => {
           :style="{ '--d': (idx * 0.06).toFixed(2) + 's' }"
           class="reveal anim-up card flex flex-col rounded-[22px] border border-slate-200 bg-white overflow-hidden shadow-sm hover:shadow-md transition"
         >
-          <!-- Capa -->
           <div class="overflow-hidden">
             <img
               :src="i.capa || '/placeholder-imovel.jpg'"
@@ -120,7 +136,6 @@ onBeforeUnmount(() => {
             />
           </div>
 
-          <!-- Corpo -->
           <div class="p-5 flex flex-col flex-1">
             <div class="flex items-center gap-3 text-sm text-slate-600">
               <span class="inline-flex items-center gap-1">

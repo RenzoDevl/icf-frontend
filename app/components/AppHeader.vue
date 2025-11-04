@@ -53,7 +53,6 @@ function closeMenu () {
     ]"
   >
     <nav class="relative w-full px-2 md:px-3 h-24 md:h-32 flex items-center justify-between gap-4">
-      <!-- LOGO GRANDE (igual antes) -->
       <NuxtLink to="/" class="flex items-center gap-3 shrink-0 ml-0" aria-label="Ir para o início">
         <span class="relative block shrink-0 overflow-visible h-[clamp(300px,18vw,200px)] w-[clamp(260px,36vw,720px)]">
           <img
